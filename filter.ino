@@ -7,7 +7,7 @@ const float P[100] = {   1.0244210E-03, 1.0566031E-03, 1.1136336E-03, 1.1967055E
 //cutoff frequencies for the cosine modulation
 const float FC[10] = {  2*1000/fs,   2*2000/fs,  2*3000/fs,  2*4000/fs,   2*5000/fs,  2*6000/fs,  2*7000/fs,  2*8000/fs,   2*9000/fs,  2*10000/fs  }; 
 float x;
-float y[10][N]; //matrix of output values for each filter
+float y[10][10*N]; //matrix of output values for each filter
 static float XBuff[N] ; //circular buffer utilized by the filter function, static used so all values automatically initialized to zero
 int writeInd = 0; //write index for the circular buffer, easier to keep track of than pointer to element in XBuff;
 
