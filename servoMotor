@@ -1,0 +1,49 @@
+const int s1 =  9; //pin 9
+const int s2 =  10; //pin 10
+
+void Forward(){
+ analogWrite(s1,128);
+ analogWrite(s2,255);
+}
+void Reverse(){
+ analogWrite(s1,255);
+ analogWrite(s2,128);
+}
+void ForwardLeft(){
+ analogWrite(s1,190);
+ analogWrite(s2,255);
+}
+void ForwardRight(){
+ analogWrite(s1,128);
+ analogWrite(s2,190);
+}
+void ReverseLeft(){
+ analogWrite(s1,190);
+ analogWrite(s2,128);
+}
+void ReverseRight(){
+ analogWrite(s1,255);
+ analogWrite(s2,190);
+}
+
+void setup()   {                
+ pinMode(s1, OUTPUT); //pin 9 acts as output
+ pinMode(s2, OUTPUT); //pin 10 acts as output
+ // we can change frequency using analogWriteFrequency
+}
+
+void loop()                    
+{
+ Forward();
+ delay(4000);
+ ForwardLeft();
+ delay(4000);
+ ReverseLeft();
+ delay(4000);
+ ForwardRight();
+ delay(4000);
+ ReverseRight();
+ delay(4000);
+ Reverse();
+ delay(4000);
+}
