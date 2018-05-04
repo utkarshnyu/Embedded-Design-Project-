@@ -6,16 +6,11 @@
 
 const uint16_t nfft = 256; //This value MUST ALWAYS be a power of 2
 
-
-
-
-
-
 const int N = 100; //length of filter, and buffer
 const double fs = 50000; //sampling frequency
 const int L = nfft;
 const double TMic = 1; //period of the microphone's oscillation, assume integer multiple of fs/L
-const int fmLength = int(TMic*fs/L); //filter max vector length for each filtering period
+const int fmLength = nfft;//int(TMic*fs/L); //filter max vector length for each filtering period
 const double filterFreq = fs/L;
 
 //baseband filter coefficients
@@ -27,11 +22,11 @@ long dt = 1/fs, ts1, ts2;
 uint16_t value;
 float volt;
 
-float T = 0.1; //threshold
+float T = 0; //threshold
 float angles[10];
 
 float x; //input from mic
-static double XBuff[nfft] ; //circular buffer utilized by the filter function, static used so all values automatically initialized to zero
+double XBuff[nfft] ; //circular buffer utilized by the filter function, static used so all values automatically initialized to zero
 int xWrite = 0;
 int yWrite = 0;
 
@@ -43,23 +38,34 @@ double fBank[10][nfft];
 double filtMax[10][fmLength];
 //[i][j] is the output value of the ith filter at the jth fft block
 
+double vReal[nfft];
+double vImag[nfft];
 
 void setup() {
-  static double PBandR[256];
-  static double PBandI[256];
+  Serial.begin(9600);
+  
   //Set FFT of entire filter bank in fBank struct
   for(int fInd=0; fInd<10; fInd++){
-    for(int j=0; j<N; j++){
-      PBandR[j] = 2*P[j]*cos(PI*FC[fInd]*j);//cosine modulate it
-    }
-    FFT.Windowing(PBandR, nfft, FFT_WIN_TYP_HAMMING, FFT_FORWARD);
-    FFT.Compute(PBandR, PBandI, nfft, FFT_FORWARD); /* Compute FFT */
-    FFT.ComplexToMagnitude(PBandR, PBandI, nfft);
     for(int j=0; j<nfft; j++){
-      fBank[fInd][j] = PBandR[j]; //assign filter bank to magnitude values. This is a real filter so it should be fine
+      vReal[j] = 0;
+      vImag[j] = 0;
     }
-  }
+    //Serial.println(vReal[150]);
+    for(int j=0; j<N; j++){
+      vReal[j] = 2*P[j]*cos(PI*FC[fInd]*j);//cosine modulate it
+    }
+    //FFT.Windowing(PBandR, nfft, FFT_WIN_TYP_HAMMING, FFT_FORWARD);
+    FFT.Compute(vReal, vImag, nfft, FFT_FORWARD); /* Compute FFT */
+    FFT.ComplexToMagnitude(vReal, vImag, nfft);
+    for(int j=0; j<nfft; j++){
+      fBank[fInd][j] = vReal[j]; //assign filter bank to magnitude values. This is a real filter so it should be fine
+    }
+    //double a = PBandR[0];
+    //Serial.println(a);
+    
 
+  }
+  Serial.println(' ');
   //adc setup
   ADC0_CFG1 |= _BV(5);                                              // DOV CLOCK BY 2
   ADC0_CFG1 |= _BV(3) | _BV(2);                                     // 16 BIT MODE 
@@ -79,31 +85,36 @@ void loop() {
   ts2 = micros();
   if (ts2-ts1 >= dt){
   value = ADC0_RA;
-  volt = ((float)value/65535.0)*3.3;
+  volt = ((float)value/65535.0)*3.3-1.65;
   ts1 = micros();
   XBuff[xWrite] = volt;
+  //Serial.println(XBuff[xWrite]);
 
   xWrite++;
   if(!(xWrite%nfft)){
       filter(XBuff, yWrite);
       yWrite++;
       yWrite %= fmLength;
+      Serial.println(filtMax[9][0]);
     }
-  xWrite %= nfft;
   }
+  xWrite %= nfft;
 }
 
 
 void filter(double XBuff[], int outInd){
   //fft of xBuff
   double XFFT[nfft];
-  static double XBuffI[nfft];
-  FFT.Windowing(XBuff, nfft, FFT_WIN_TYP_HAMMING, FFT_FORWARD);
-  FFT.Compute(XBuff, XBuffI, nfft, FFT_FORWARD); /* Compute FFT */
-  FFT.ComplexToMagnitude(XBuff, XBuffI, nfft);
+  double vReal[nfft] = {*XBuff};
+  static double vImag[nfft];
+  //FFT.Windowing(XBuff, nfft, FFT_WIN_TYP_HAMMING, FFT_FORWARD);
+  FFT.Compute(vReal, vImag, nfft, FFT_FORWARD); /* Compute FFT */
+  FFT.ComplexToMagnitude(vReal, vImag, nfft);
   for(int j=0; j<nfft; j++){
-    XFFT[j] = XBuff[j]; //assign filter bank to magnitude values. This is a real filter so it should be fine
+    XFFT[j] = vReal[j]; //assign filter bank to magnitude values. This is a real filter so it should be fine
+    
   }
+  //Serial.println(maxval(XFFT, T, nfft));
   
 
   for(int i=0; i<10; i++){
@@ -112,6 +123,7 @@ void filter(double XBuff[], int outInd){
        out[sumInd] = fBank[i][sumInd]*XFFT[sumInd];
     }
     filtMax[i][outInd] = maxval(out, T, nfft);
+    
   }
 }
   //will filter and return max value for each subband of the filter bank
