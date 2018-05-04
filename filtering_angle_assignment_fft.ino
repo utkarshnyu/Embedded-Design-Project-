@@ -30,6 +30,8 @@ double XBuff[nfft] ; //circular buffer utilized by the filter function, static u
 int xWrite = 0;
 int yWrite = 0;
 
+int argMaxVals[10];
+
 arduinoFFT FFT = arduinoFFT();
 
 //filter bank FFT
@@ -131,21 +133,24 @@ void filter(double XBuff[], int outInd){
 
 
 
-int argmax(float x[],int L){ //returns argmax value of array x, using threshold T for the min value
+void argmax(float x[10][L],int L){ //returns row-wise argmax value of 2-D array x, using threshold T for the min value
   int maxInd = 0;
-  float currMax = 0;
-  for(int i = 0; i<L; i++){
-    if (x[i]>currMax){
-      currMax = x[i];
-      maxInd = i;
+  
+  for(int j = 0; j<10; j++){
+    float currMax = 0;
+    for(int i = 0; i<L; i++){
+      if (x[j][i]>currMax){
+        currMax = x[j][i];
+        maxInd = i;
+      }
+    }
+    if(currMax==0){
+      argMaxVals[j] = L+1; //return something nonsensical, i.e. an angle greater than 2pi, if the signal is not detected
+    }
+    else{
+      argMaxVals[j] = maxInd;  
     }
   }
-  if(currMax==0){
-    return TMic*fs/L+1; //return something nonsensical, i.e. an angle greater than 2pi, if the signal is not detected
-  }
-  else{
-    return maxInd;
-  } 
 }
 
 
