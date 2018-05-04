@@ -9,9 +9,10 @@ const uint16_t nfft = 256; //This value MUST ALWAYS be a power of 2
 const int N = 100; //length of filter, and buffer
 const double fs = 50000; //sampling frequency
 const int L = nfft;
-const double TMic = 1; //period of the microphone's oscillation, assume integer multiple of fs/L
-const int fmLength = nfft;//int(TMic*fs/L); //filter max vector length for each filtering period
+const int fmLength = nfft;//filter max vector length for each filtering period, will be our angle resolution
 const double filterFreq = fs/L;
+
+int backwardsFlag = 0; //flag set if the motor is moving backwards, fill the filtMax matrix backwards
 
 //baseband filter coefficients
 const double P[N] = {   1.0244210E-03, 1.0566031E-03, 1.1136336E-03, 1.1967055E-03, 1.3068667E-03, 1.4450103E-03, 1.6118649E-03, 1.8079871E-03, 2.0337543E-03, 2.2893588E-03, 2.5748033E-03, 2.8898975E-03, 3.2342561E-03, 3.6072978E-03, 4.0082460E-03, 4.4361308E-03, 4.8897919E-03, 5.3678834E-03, 5.8688794E-03, 6.3910814E-03, 6.9326264E-03, 7.4914967E-03, 8.0655302E-03, 8.6524324E-03, 9.2497889E-03, 9.8550794E-03, 1.0465691E-02, 1.1078936E-02, 1.1692065E-02, 1.2302282E-02, 1.2906767E-02, 1.3502688E-02, 1.4087217E-02, 1.4657553E-02, 1.5210935E-02, 1.5744659E-02, 1.6256098E-02, 1.6742714E-02, 1.7202077E-02, 1.7631881E-02, 1.8029955E-02, 1.8394279E-02, 1.8722996E-02, 1.9014426E-02, 1.9267073E-02, 1.9479638E-02, 1.9651024E-02, 1.9780345E-02, 1.9866933E-02, 1.9910340E-02, 1.9910340E-02, 1.9866933E-02, 1.9780345E-02, 1.9651024E-02, 1.9479638E-02, 1.9267073E-02, 1.9014426E-02, 1.8722996E-02, 1.8394279E-02, 1.8029955E-02, 1.7631881E-02, 1.7202077E-02, 1.6742714E-02, 1.6256098E-02, 1.5744659E-02, 1.5210935E-02, 1.4657553E-02, 1.4087217E-02, 1.3502688E-02, 1.2906767E-02, 1.2302282E-02, 1.1692065E-02, 1.1078936E-02, 1.0465691E-02, 9.8550794E-03, 9.2497889E-03, 8.6524324E-03, 8.0655302E-03, 7.4914967E-03, 6.9326264E-03, 6.3910814E-03, 5.8688794E-03, 5.3678834E-03, 4.8897919E-03, 4.4361308E-03, 4.0082460E-03, 3.6072978E-03, 3.2342561E-03, 2.8898975E-03, 2.5748033E-03, 2.2893588E-03, 2.0337543E-03, 1.8079871E-03, 1.6118649E-03, 1.4450103E-03, 1.3068667E-03, 1.1967055E-03, 1.1136336E-03, 1.0566031E-03, 1.0244210E-03   };
@@ -124,8 +125,13 @@ void filter(double XBuff[], int outInd){
     for(int sumInd=0; sumInd<nfft; sumInd++){
        out[sumInd] = fBank[i][sumInd]*XFFT[sumInd];
     }
-    filtMax[i][outInd] = maxval(out, T, nfft);
     
+    if(backwardsFlag){
+      filtMax[i][fmLength-outInd-1] = maxval(out, T, nfft);
+    }
+    else{
+      filtMax[i][outInd] = maxval(out, T, nfft);
+    }
   }
 }
   //will filter and return max value for each subband of the filter bank
