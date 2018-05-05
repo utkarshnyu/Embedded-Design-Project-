@@ -1,14 +1,14 @@
 #include "arduinoFFT.h"
 
-arduinoFFT FFT = arduinoFFT(); /* Create FFT object */
+arduinoFFT FFT = arduinoFFT();
 /*
 These values can be changed in order to evaluate the functions
 */
 #define CHANNEL A0
 const int samples = 128; //This value MUST ALWAYS be a power of 2
-const double samplingFrequency = 32000; //Hz, must be less than 10000 due to ADC
+const double samplingFrequency = 32000;
 
-long sampling_period_us;
+long sampPeriod_us;
 
 /*
 These are the input and output vectors
@@ -26,7 +26,7 @@ int freqBeaconAngle = 0; //0 = 1khz, 1 = 2khz,...,9 = 10kHz
 
 void setup()
 {
-  sampling_period_us = round(1000000*(1.0/samplingFrequency));
+  sampPeriod_us = round(1000000*(1.0/samplingFrequency));
   Serial.begin(115200);
   analogReadResolution(12);
   analogReadAveraging(6);
@@ -38,7 +38,7 @@ void loop()
   for(int i = 0;  i < 180; i++)
   {
     //insert servo motor moving code here
-    SampleData(vReal, vImag, samples, sampling_period_us);
+    SampleData(vReal, vImag, samples, sampPeriod_us);
     FFT.Compute(vReal, vImag, samples, FFT_FORWARD); /* Compute FFT */
     FFT.ComplexToMagnitude(vReal, vImag, samples); /* Compute magnitudes */
     StoreFFTData(vReal, i);
@@ -65,20 +65,20 @@ void StoreFFTData(double *data, int servoDegree)
   int desiredFreq = 0;
   for(uint16_t i = 4; i < 41; i=i+4)
   {
-    FFTMatrix[desiredFreq][servoDegree] = data[i]; //FFTMatrix is a global variable that stores 
+    FFTMatrix[desiredFreq][servoDegree] = data[i]; //FFTMatrix is a global variable that stores values of all the FFTs for each freq band for each servo motor angle
     desiredFreq++;
   }
 }
 
 void SampleData(double realData[], double imagData[], int numSamples, long sampPeriod)
 {
-  double temp;
+  double adcData;
   unsigned long timeStamp;
   for(int i=0; i<samples; i++)
   {
       timeStamp = micros();
-      temp = analogRead(CHANNEL);
-      realData[i] =  ((temp * 3.3) / 2048) - 1.65;
+      adcData = analogRead(CHANNEL);
+      realData[i] =  ((adcData * 3.3) / 2048) - 1.65;
       imagData[i] = 0;
       while(micros() < (timeStamp + sampPeriod));
   }
