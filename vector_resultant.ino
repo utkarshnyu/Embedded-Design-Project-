@@ -18,24 +18,24 @@ void loop() {
 }
 
 
-float magnitude(float lambda[], float V[], float angles[]){
-  float x=0;
-  float y=0;
+double magnitude(double lambda[], double V[], double angles[]){
+  double x=0;
+  double y=0;
   for(int i=0; i<10; i++){
-    x += lambda[i]*V[i]*cosf(angles[i]);
-    y += lambda[i]*V[i]*sinf(angles[i]);
+    x += lambda[i]*V[i]*cos(angles[i]);
+    y += lambda[i]*V[i]*sin(angles[i]);
   }
   return sqrt((x*x)+(y*y));
 
   
 }
 
-float angle(float lambda[], float V[], float angles[]){
-  float x=0;
-  float y=0;
+double angle(double lambda[], double V[], double angles[]){
+  double x=0;
+  double y=0;
   for(int i=0; i<10; i++){
-    x += lambda[i]*V[i]*cosf(angles[i]);
-    y += lambda[i]*V[i]*sinf(angles[i]);
+    x += lambda[i]*V[i]*cos(angles[i]);
+    y += lambda[i]*V[i]*sin(angles[i]);
   }
   return atanf(y/x);
 }
