@@ -87,11 +87,11 @@ void loop()
   
 
   
-  /*digitalWrite(13, HIGH);
+  digitalWrite(13, HIGH);
   mov("Forward",2000,210,210);
   alignment(0);
   mov("Halt",2000,190,190);
-  digitalWrite(13, LOW);*/
+  digitalWrite(13, LOW);
 }
 
 void StoreFFTData(double *data, int servoDegree)
@@ -162,7 +162,7 @@ void alignment(int beaconAngle)
   if(beaconAngle<90){
     //car has to turn left
     analogWrite(s1,210);
-    analogWrite(s2,172);
+    analogWrite(s2,162);
     delay(angmap(90-beaconAngle));
     analogWrite(s1,190);
     analogWrite(s2,190);
@@ -181,7 +181,7 @@ int angmap(int angle)
 {
   int d[91];
   for(int k =0;k<=90;k++){
-    d[k] = 500*(k/90);
+    d[k] = 1500*(k/90);
   }
   return d[angle];
 }
